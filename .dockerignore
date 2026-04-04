@@ -1,0 +1,75 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+# Environment variables
+
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.sqlite
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Docker
+.dockerignore
+
+# Git
+.git/
+.gitignore
+
+# Documentation (don't need in image)
+*.md
+!README.md
+
+# Tests (don't need in production image)
+tests/
+test_*.py
+*_test.py
+
+# Development files
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Alembic (keep only necessary files)
+alembic/versions/*.pyc
+
+# Large model files (download at runtime)
+# Note: We need the models/ directory (database models)
+# Only exclude large AI model files
+*.pth
+*.bin
+*.onnx
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/

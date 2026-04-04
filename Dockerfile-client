@@ -1,0 +1,57 @@
+# # ===== Build stage =====
+# FROM python:3.10-slim AS build
+# WORKDIR /app
+
+# COPY requirements.txt .
+# RUN pip install -r requirements.txt -t /deps
+
+# COPY . .
+# RUN python -m compileall .
+
+# # ===== Runtime stage =====
+# FROM gcr.io/distroless/python3
+# WORKDIR /app
+
+# COPY --from=build /deps /deps
+# COPY --from=build /app/__pycache__ /app
+
+# ENV PYTHONPATH=/deps
+# EXPOSE 8000
+
+# CMD ["main.cpython-310.pyc"]
+# ===== Build stage =====
+FROM python:3.11-slim AS build
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt -t /deps
+
+COPY . .
+RUN python -m compileall .
+
+# ===== Runtime =====
+FROM gcr.io/distroless/python3
+WORKDIR /app
+
+COPY --from=build /deps /deps
+COPY --from=build /app/__pycache__ /app
+COPY --from=build /app/alembic.ini /app/
+COPY --from=build /app/alembic /app/alembic
+COPY --from=build /app/config /app/config
+COPY --from=build /app/enums /app/enums
+COPY --from=build /app/models /app/models
+COPY --from=build /app/routers /app/routers
+COPY --from=build /app/schemas /app/schemas
+COPY --from=build /app/templates /app/templates
+COPY --from=build /app/utils /app/utils
+COPY --from=build /app/pdf_templates /app/pdf_templates
+COPY --from=build /app/main.py /app/
+COPY --from=build /app/master.py /app/
+COPY --from=build /app/thumbnail_new.py /app/
+COPY --from=build /app/track_img_diffusers.py /app/
+COPY --from=build /app/track_name.py /app/
+
+ENV PYTHONPATH=/deps
+EXPOSE 8000
+
+CMD ["-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

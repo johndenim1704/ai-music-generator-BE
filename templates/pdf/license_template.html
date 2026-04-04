@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ license_type|upper }} LICENSE AGREEMENT</title>
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #000;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .license-info {
+            margin-bottom: 30px;
+        }
+
+        .license-info table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .license-info td {
+            padding: 5px 0;
+            vertical-align: top;
+        }
+
+        .label {
+            font-weight: bold;
+            width: 150px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ccc;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+        }
+
+        .terms {
+            text-align: justify;
+            margin-bottom: 30px;
+        }
+
+        .terms p {
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            margin-top: 50px;
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+            font-size: 10px;
+            color: #666;
+            text-align: center;
+        }
+
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-block {
+            width: 45%;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            margin-top: 40px;
+            margin-bottom: 5px;
+        }
+
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            color: rgba(0, 0, 0, 0.05);
+            z-index: -1;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="watermark">LICENSED TO: {{ licensee_name|upper }}</div>
+
+    <div class="header">
+        <h1>{{ license_type|upper }} LICENSE AGREEMENT</h1>
+        <p>This is a legally binding agreement.</p>
+    </div>
+
+    <div class="section-title">License Details</div>
+    <div class="license-info">
+        <table>
+            <tr>
+                <td class="label">Beat/Track Title:</td>
+                <td>{{ music_name }}</td>
+            </tr>
+            <tr>
+                <td class="label">License ID:</td>
+                <td>{{ license_id }}</td>
+            </tr>
+            <tr>
+                <td class="label">Order ID:</td>
+                <td>{{ order_id }}</td>
+            </tr>
+            <tr>
+                <td class="label">Date:</td>
+                <td>{{ timestamp }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section-title">Licensor (Producer)</div>
+    <div class="license-info">
+        <table>
+            <tr>
+                <td class="label">Full Name:</td>
+                <td>{{ author_legal_name }}</td>
+            </tr>
+            {% if author_ipi %}
+            <tr>
+                <td class="label">IPI/CAE #:</td>
+                <td>{{ author_ipi }}</td>
+            </tr>
+            {% endif %}
+            {% if author_pro %}
+            <tr>
+                <td class="label">PRO:</td>
+                <td>{{ author_pro }}</td>
+            </tr>
+            {% endif %}
+            {% if publisher_name %}
+            <tr>
+                <td class="label">Publisher:</td>
+                <td>{{ publisher_name }}</td>
+            </tr>
+            {% endif %}
+            {% if publisher_ipi %}
+            <tr>
+                <td class="label">Publisher IPI:</td>
+                <td>{{ publisher_ipi }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+
+    <div class="section-title">Licensee (Buyer)</div>
+    <div class="license-info">
+        <table>
+            <tr>
+                <td class="label">Full Name:</td>
+                <td>{{ licensee_name }}</td>
+            </tr>
+            {% if licensee_pro %}
+            <tr>
+                <td class="label">PRO:</td>
+                <td>{{ licensee_pro }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td class="label">IP Address:</td>
+                <td>{{ buyer_ip }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section-title">Payment</div>
+    <div class="license-info">
+        <table>
+            <tr>
+                <td class="label">Amount Paid:</td>
+                <td>{{ currency }} {{ amount_paid }}</td>
+            </tr>
+            <tr>
+                <td class="label">Payment Method:</td>
+                <td>{{ payment_method }}</td>
+            </tr>
+            <tr>
+                <td class="label">Transaction ID:</td>
+                <td>{{ transaction_id }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section-title">Terms & Conditions</div>
+    <div class="terms">
+        <p><strong>1. Grant of License:</strong> The Licensor hereby grants to Licensee a non-exclusive,
+            non-transferable license to use the musical work named above ("Work") in the manner described in the
+            standard {{ license_type }} license terms.</p>
+        <p><strong>2. Rights:</strong> This license grants rights specific to the {{ license_type }} tier purchased.
+            Please refer to the full terms on our website for usage limits (streams, distribution, etc.).</p>
+        <p><strong>3. Credit:</strong> Licensee shall acknowledge the Licensor in all credits, media, and packaging as
+            "Produced by {{ author_legal_name }}" or similar.</p>
+        <p><strong>4. Ownership:</strong> The Licensor maintains 100% copyright ownership of the underlying composition.
+            This license is for usage rights only.</p>
+        <p><strong>5. No Resale:</strong> Licensee may not resell, lease, or lend the Work to third parties.</p>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-block">
+            <div class="signature-line"></div>
+            <div><strong>Licensor:</strong> {{ author_legal_name }}</div>
+            <div>(Electronically Authorized)</div>
+        </div>
+        <div class="signature-block">
+            <div class="signature-line"></div>
+            <div><strong>Licensee:</strong> {{ licensee_name }}</div>
+            <div>(Electronically Signed)</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Generated on {{ timestamp }} | License ID: {{ license_id }} | Page 1 of 1
+    </div>
+</body>
+
+</html>

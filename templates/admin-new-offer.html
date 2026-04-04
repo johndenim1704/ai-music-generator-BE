@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Offer Notification</title>
+<style>
+    body { margin: 0; padding: 0; background-color: #1a1a1a; font-family: Arial, sans-serif; }
+    table { border-spacing: 0; }
+    td { padding: 0; }
+    img { border: 0; }
+    .wrapper { width: 100%; table-layout: fixed; background-color: #1a1a1a; padding-bottom: 60px; }
+    .main { background-color: #2c2c2c; margin: 0 auto; width: 100%; max-width: 600px; border-spacing: 0; color: #ffffff; }
+    .button { background-color: #e63946; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 5px; font-weight: bold; }
+</style>
+</head>
+<body>
+    <center class="wrapper">
+        <table class="main" width="100%">
+            <tr>
+                <td style="padding: 20px 0; text-align: center; background-color: #111;">
+                    <h1 style="font-size: 28px; color: #ffffff; margin: 0;">Bujaa BEATS</h1>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 40px 30px;">
+                    <h2 style="font-size: 24px; color: #ffffff; margin-top: 0;">New Offer Received!</h2>
+                    <p style="font-size: 16px; line-height: 24px; color: #cccccc;">
+                        A user has just made an offer for an Exclusive License. Please review the details below and take action.
+                    </p>
+                    <div style="background-color: #3d3d3d; padding: 20px; border-radius: 8px; margin-top: 20px; font-size: 16px; line-height: 28px;">
+                        <b>Beat:</b> {{ params.beat_name }}<br>
+                        <b>User:</b> {{ params.user_name }} ({{ params.user_email }})<br>
+                        <b>Offer Amount:</b> <span style="font-weight: bold; font-size: 18px;">{{ params.offer_amount }}€</span>
+                    </div>
+                    <p style="text-align: center; margin-top: 30px;">
+                        <a href="{{ params.admin_link }}" class="button">View Offer in Dashboard</a>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 30px; text-align: center; background-color: #111;">
+                    <p style="color: #888888; font-size: 12px;">This is an automated notification.</p>
+                </td>
+            </tr>
+        </table>
+    </center>
+</body>
+</html>
