@@ -35,9 +35,12 @@ def create_coupon(request: CouponCreate, db: Session = Depends(get_db)):
         stripe_coupon_params = {}
         if request.discount_type.value == "percent":
             stripe_coupon_params['percent_off'] = request.value
-        else:
+        elif request.discount_type.value == "fixed_amount":
             stripe_coupon_params['amount_off'] = int(request.value * 100)
             stripe_coupon_params['currency'] = 'eur'
+        elif request.discount_type.value == "bulk_offer":
+            # Stripe doesn't support B1G1, we use a 0% coupon as a placeholder
+            stripe_coupon_params['percent_off'] = 0
         if request.max_redemptions:
             stripe_coupon_params['max_redemptions'] = request.max_redemptions
         stripe_coupon = stripe.Coupon.create(**stripe_coupon_params)
@@ -53,6 +56,8 @@ def create_coupon(request: CouponCreate, db: Session = Depends(get_db)):
             code=request.code,
             discount_type=request.discount_type,
             value=request.value,
+            buy_count=request.buy_count,
+            get_count=request.get_count,
             is_active=request.is_active,
             applies_to_entity=request.applies_to_entity,
             applies_to_id=request.applies_to_id,

@@ -13,7 +13,9 @@ class Coupon(Base):
     code = Column(String(255), unique=True, nullable=False, index=True)
     
     discount_type = Column(Enum(couponenums.DiscountType), nullable=False)
-    value = Column(Float, nullable=False) 
+    value = Column(Float, nullable=True) 
+    buy_count = Column(Integer, nullable=True)
+    get_count = Column(Integer, nullable=True)
     is_active = Column(Boolean, default=True)
     applies_to_entity = Column(Enum(couponenums.CouponScope), default=couponenums.CouponScope.GLOBAL)
     applies_to_id = Column(Integer, ForeignKey('licenses.id', ondelete="SET NULL"), nullable=True)
