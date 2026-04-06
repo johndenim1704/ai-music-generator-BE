@@ -36,4 +36,3 @@ class Music(Base):
     liked_by_users = relationship("UserLikedMusic", back_populates="music",cascade="all, delete-orphan")
     playlist_items = relationship("PlaylistMusic", back_populates="music",cascade="all, delete-orphan")
     listening_history = relationship("ListeningHistory", back_populates="music" , cascade="all, delete-orphan")
-    comments = relationship("MusicComment", back_populates="music", cascade="all, delete-orphan")

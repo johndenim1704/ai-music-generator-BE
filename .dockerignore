@@ -7,8 +7,13 @@ __pycache__/
 
 # Virtual environments
 venv/
-# Environment variables
+env/
+ENV/
 
+# Environment variables
+.env
+.env.*
+!.env.example
 
 # IDE
 .vscode/

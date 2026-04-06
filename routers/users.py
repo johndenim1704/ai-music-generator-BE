@@ -20,8 +20,7 @@ s3_manager = S3Manager()
 marketing_client = MarketingService()
 
 
-@router.get("/users")
-@router.get("/users/", include_in_schema=False)
+@router.get("/users/")
 async def get_users(
     db: Session = Depends(get_db),
     admin_user: Users = Depends(admin_required),

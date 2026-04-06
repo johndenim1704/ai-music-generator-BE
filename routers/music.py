@@ -5,18 +5,15 @@ import re
 
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from models.music import Music
-from models.music_comment import MusicComment
 from models.user import Users
 from models.userlikedmusic import UserLikedMusic
-from schemas.music_comment import MusicCommentCreate
 from utils.s3_manager import S3Manager
 from utils.limiter import limiter
 from utils.deps import get_db, get_current_user, get_current_user_optional, admin_required
-from utils.utils import is_user_admin
 
 router = APIRouter(tags=["music"])  # keeping paths identical
 
@@ -29,7 +26,7 @@ async def get_music(
     current_user: Optional[Users] = Depends(get_current_user_optional)
 ) -> List[Dict[str, Any]]:
     try:
-        music_list = db.query(Music).order_by(Music.created_at.desc()).all()
+        music_list = db.query(Music).all()
         liked_music_ids = set()
         if current_user:
             music_ids = [music.id for music in music_list]
@@ -62,92 +59,6 @@ async def get_music_by_id(music_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to retrieve music: {str(e)}")
 
-
-def serialize_comment(comment: MusicComment, include_replies: bool = True):
-    user = comment.user
-    data = {
-        "id": comment.id,
-        "music_id": comment.music_id,
-        "user_id": comment.user_id,
-        "content": comment.content,
-        "parent_id": comment.parent_id,
-        "created_at": comment.created_at,
-        "user": {
-            "id": user.id if user else None,
-            "name": user.name if user else None,
-            "profile_picture": user.profile_piture if user else None,
-        },
-        "replies": [],
-    }
-    if include_replies:
-        data["replies"] = [serialize_comment(reply, include_replies=False) for reply in comment.replies]
-    return data
-
-
-@router.get("/music/{music_id}/comments")
-async def get_music_comments(music_id: int, db: Session = Depends(get_db)):
-    try:
-        music = db.query(Music).filter(Music.id == music_id).first()
-        if not music:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Music not found")
-
-        comments = (
-            db.query(MusicComment)
-            .options(
-                selectinload(MusicComment.user),
-                selectinload(MusicComment.replies).selectinload(MusicComment.user),
-            )
-            .filter(MusicComment.music_id == music_id, MusicComment.parent_id.is_(None))
-            .order_by(MusicComment.created_at.asc())
-            .all()
-        )
-        return [serialize_comment(comment, include_replies=True) for comment in comments]
-    except HTTPException as he:
-        raise HTTPException(status_code=he.status_code, detail=he.detail)
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to retrieve comments: {str(e)}")
-
-
-@router.post("/music/{music_id}/comments", status_code=status.HTTP_201_CREATED)
-async def create_music_comment(
-    music_id: int,
-    payload: MusicCommentCreate,
-    db: Session = Depends(get_db),
-    current_user: Users = Depends(get_current_user),
-):
-    if not current_user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated. Please log in to comment.")
-    try:
-        music = db.query(Music).filter(Music.id == music_id).first()
-        if not music:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Music not found")
-
-        parent_id = payload.parent_id
-        if parent_id and not is_user_admin(current_user):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can reply to comments.")
-        if parent_id:
-            parent_comment = db.query(MusicComment).filter(MusicComment.id == parent_id).first()
-            if not parent_comment or parent_comment.music_id != music_id:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid parent comment")
-
-        new_comment = MusicComment(
-            music_id=music_id,
-            user_id=current_user.id,
-            parent_id=parent_id,
-            content=payload.content,
-        )
-        db.add(new_comment)
-        db.commit()
-        db.refresh(new_comment)
-        db.refresh(current_user)
-        new_comment.user = current_user
-        return serialize_comment(new_comment, include_replies=False)
-    except HTTPException as he:
-        db.rollback()
-        raise HTTPException(status_code=he.status_code, detail=he.detail)
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to create comment: {str(e)}")
 
 @router.post("/upload-music", status_code=status.HTTP_201_CREATED)
 async def upload_music(

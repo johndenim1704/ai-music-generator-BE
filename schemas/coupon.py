@@ -6,9 +6,7 @@ from enums import couponenums
 class CouponBase(BaseModel):
     code: str = Field(..., description="The user-facing coupon code (e.g., 'SUMMER20').")
     discount_type: couponenums.DiscountType
-    value: Optional[float] = Field(None, description="The discount value. 20.0 for percent, 10.00 for fixed amount.")
-    buy_count: Optional[int] = None
-    get_count: Optional[int] = None
+    value: float = Field(..., gt=0, description="The discount value. 20.0 for percent, 10.00 for fixed amount.")
     is_active: bool = True
 
 class CouponCreate(CouponBase):
