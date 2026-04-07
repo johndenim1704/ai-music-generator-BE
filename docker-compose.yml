@@ -1,27 +1,20 @@
-version: "3.9"
-
 services:
 
-  # =========================
-  # MySQL Database
-  # =========================
+# ===================== MYSQL =====================
   db:
     image: mysql:8.0
     container_name: aimusic_mysql
     restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    command: >
-      --default-authentication-plugin=mysql_native_password
-      --innodb_flush_log_at_trx_commit=1
-      --sync_binlog=1
+      MYSQL_ROOT_PASSWORD: music
+      MYSQL_DATABASE: aimusicgeneration
+      MYSQL_USER: music
+      MYSQL_PASSWORD: music
     volumes:
-      - aimusic_db_data:/var/lib/mysql
+      - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p${MYSQL_ROOT_PASSWORD} || exit 1"]
+      test: ["CMD-SHELL","mysqladmin ping -h 127.0.0.1 -uroot -pmusic || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -30,51 +23,42 @@ services:
       - aimusic_network
 
 
-  # =========================
-  # Redis
-  # =========================
+# ===================== REDIS =====================
   redis:
     image: redis:7-alpine
     container_name: aimusic_redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --appendfsync everysec --maxmemory 1gb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes
     volumes:
-      - aimusic_redis_data:/data
+      - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD","redis-cli","ping"]
       interval: 10s
-      timeout: 3s
       retries: 5
     networks:
       - aimusic_network
 
 
-  # =========================
-  # Ollama
-  # =========================
+# ===================== OLLAMA =====================
   ollama:
     image: ollama/ollama:latest
     container_name: aimusic_ollama
     restart: unless-stopped
     volumes:
-      - aimusic_ollama_data:/root/.ollama
-    environment:
-      - OLLAMA_HOST=0.0.0.0:11434
+      - ollama_data:/root/.ollama
     entrypoint: /bin/sh
     command: -c "ollama serve & sleep 10 && ollama pull llama3.2:latest && wait"
     networks:
       - aimusic_network
 
 
-  # =========================
-  # FastAPI API
-  # =========================
+# ===================== FASTAPI =====================
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: aimusic_api
     restart: unless-stopped
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy
@@ -82,98 +66,115 @@ services:
         condition: service_healthy
       ollama:
         condition: service_started
-    env_file:
-      - .env
     environment:
-      DATABASE_URL: mysql+mysqlconnector://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}
+      DATABASE_URL: mysql+mysqlconnector://music:music@db:3306/aimusicgeneration
+
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_USERNAME: music
+      MYSQL_PASSWORD: music
+      MYSQL_DATABASE: aimusicgeneration
+
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_DB: 0
+
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+
       OLLAMA_HOST: http://ollama:11434
       PYTHONUNBUFFERED: 1
+
     ports:
       - "8000:8000"
     volumes:
       - ./logs:/app/logs
     command: >
-      sh -c "alembic upgrade head &&
+      sh -c "
+      alembic upgrade head &&
       gunicorn main:app
-      --worker-class uvicorn.workers.UvicornWorker
+      -k uvicorn.workers.UvicornWorker
       --workers 2
-      --threads 1
       --timeout 120
-      --graceful-timeout 30
-      --keep-alive 5
-      --max-requests 500
-      --max-requests-jitter 25
-      --bind 0.0.0.0:8000
-      --access-logfile -
-      --error-logfile -"
+      --bind 0.0.0.0:8000"
     networks:
       - aimusic_network
 
 
-  # =========================
-  # Celery Worker
-  # =========================
+# ===================== CELERY WORKER =====================
   celery_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: aimusic_celery_worker
     restart: unless-stopped
-    depends_on:
-      - redis
-      - db
     env_file:
       - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
-      DATABASE_URL: mysql+mysqlconnector://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}
+      DATABASE_URL: mysql+mysqlconnector://music:music@db:3306/aimusicgeneration
+
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_USERNAME: music
+      MYSQL_PASSWORD: music
+      MYSQL_DATABASE: aimusicgeneration
+
       REDIS_HOST: redis
       REDIS_PORT: 6379
+
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+
       OLLAMA_HOST: http://ollama:11434
       PYTHONUNBUFFERED: 1
-    command: >
-      celery -A celery_app worker
-      --loglevel=info
-      --concurrency=1
-      --max-tasks-per-child=3
-      --time-limit=3600
-      --soft-time-limit=3300
+
+    command: celery -A celery_app worker --loglevel=info --concurrency=1
     networks:
       - aimusic_network
 
 
-  # =========================
-  # Celery Beat
-  # =========================
+# ===================== CELERY BEAT =====================
   celery_beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: aimusic_celery_beat
     restart: unless-stopped
-    depends_on:
-      - redis
-      - db
     env_file:
       - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+mysqlconnector://music:music@db:3306/aimusicgeneration
+      CELERY_BROKER_URL: redis://redis:6379/0
+      PYTHONUNBUFFERED: 1
     command: celery -A celery_app beat --loglevel=info
     networks:
       - aimusic_network
 
 
-  # =========================
-  # Flower
-  # =========================
+# ===================== FLOWER =====================
   flower:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: aimusic_flower
     restart: unless-stopped
+    env_file:
+      - .env
     depends_on:
-      - redis
+      - celery_worker
+    environment:
+      DATABASE_URL: mysql+mysqlconnector://music:music@db:3306/aimusicgeneration
+
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_USERNAME: music
+      MYSQL_PASSWORD: music
+      MYSQL_DATABASE: aimusicgeneration
+
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+
     command: celery -A celery_app flower --port=5555
     ports:
       - "5555:5555"
@@ -181,21 +182,21 @@ services:
       - aimusic_network
 
 
-# =========================
-# EXTERNAL VOLUMES (ALREADY CREATED)
-# =========================
+# ===================== SAFE PERSISTENT VOLUMES =====================
 volumes:
-  aimusic_db_data:
+  db_data:
     external: true
-  aimusic_redis_data:
+    name: aimusic_db_data
+
+  redis_data:
     external: true
-  aimusic_ollama_data:
+    name: aimusic_redis_data
+
+  ollama_data:
     external: true
+    name: aimusic_ollama_data
 
 
-# =========================
-# NETWORK
-# =========================
 networks:
   aimusic_network:
     driver: bridge

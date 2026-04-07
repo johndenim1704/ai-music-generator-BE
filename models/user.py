@@ -25,7 +25,7 @@ class Users(Base):
     cart_items = relationship("CartItem", back_populates="user", cascade="all, delete-orphan")
     orders = relationship("Order", back_populates="user", cascade="all, delete-orphan")
     mastered_music = relationship("MasteredMusic", back_populates="user", cascade="all, delete-orphan")
+    music_comments = relationship("MusicComment", back_populates="user", cascade="all, delete-orphan")
 
 
     
-

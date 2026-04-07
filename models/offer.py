@@ -3,6 +3,9 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from config.db import Base
 from enums import offerstatus 
+from models.user import Users
+from models.license import License
+from models.order import Order
 
 
 

@@ -1,10 +1,10 @@
 import enum 
 
 class OfferStatus(enum.Enum):
-    PENDING = "pending"            
-    ACCEPTED = "accepted"           
-    REJECTED = "rejected"          
-    COUNTER_OFFERED = "counter_offered" 
-    EXPIRED = "expired"             
-    PAYMENT_FAILED = "payment_failed" 
-    REQUIRES_ACTION = "requires_action"
+    PENDING = "PENDING"            
+    ACCEPTED = "ACCEPTED"           
+    REJECTED = "REJECTED"          
+    COUNTER_OFFERED = "COUNTER_OFFERED" 
+    EXPIRED = "EXPIRED"             
+    PAYMENT_FAILED = "PAYMENT_FAILED" 
+    REQUIRES_ACTION = "REQUIRES_ACTION"

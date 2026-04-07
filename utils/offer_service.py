@@ -18,10 +18,10 @@ class OfferService:
 
 
     def create_offer(self, user: Users, license_id: int, amount: float, payment_method_id: str) -> Offer:
-        # 1. Ensure the license is an exclusive one that allows offers
+        # 1. Ensure the license is an Exclusive License that allows offers
         license = self.db.query(License).filter(License.id == license_id).first()
         if not license or license.license_type.value != 'exclusive': # Or whatever you call it
-            raise ValueError("Offers can only be made on exclusive licenses.")
+            raise ValueError("Offers can only be made on Exclusive Licenses.")
 
         # 2. Get or create a Stripe Customer
         customer_id = payment_service.PaymentService(self.db)._get_or_create_stripe_customer(user)
@@ -100,7 +100,7 @@ class OfferService:
         # logger.info(f"Subject: Your Offer Has Been Accepted!")
         # logger.info(f"Hi {user.name},")
         # logger.info(f"Great news! Your offer of ${final_amount} for '{license.music.name}' has been accepted.")
-        # logger.info(f"Payment has been processed and your exclusive license is now available.")
+        # logger.info(f"Payment has been processed and your Exclusive License is now available.")
         # logger.info(f"=== EMAIL SENT ===")
 
 
